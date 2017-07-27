@@ -22,8 +22,8 @@ class MMonit:
         }
         self._post('/z_security_check', data=login_data)
 
-    def _get(self, url):
-        result = self.session.get(self.mmonit_url + url)
+    def _get(self, url, params=None):
+        result = self.session.get(self.mmonit_url + url, params=params)
         result.raise_for_status()
         return result
 
@@ -32,23 +32,25 @@ class MMonit:
         result.raise_for_status()
         return result
 
+    def _build_dict(self, **kwargs):
+        d = {}
+        for k, v in kwargs.iteritems():
+            if v is not None:
+                d[k] = v
+        return d
+
     def hosts_list(self, hostid=None, hostgroupid=None, status=None,
                    platform=None, led=None):
         """
         Returns the current status of all hosts registered in M/Monit.
         http://mmonit.com/documentation/http-api/Methods/Status
         """
-        data = {
-            'hostid': hostid,
-            'hostgroupid': hostgroupid,
-            'status': status,
-            'platform': platform,
-            'led': led
-        }
-        # Remove any keys that have values set to None
-        for k, v in data.items():
-            if v is None:
-                del data[k]
+        data = self._build_dict(
+            hostid=hostid,
+            hostgroupid=hostgroupid,
+            status=status,
+            platform=platform,
+            led=led)
         if not data:
             return self._get('/status/hosts/list').json()
         return self._post('/status/hosts/list', data).json()
@@ -57,7 +59,8 @@ class MMonit:
         """
         Returns detailed status of the given host.
         """
-        return self._get('/status/hosts/get?id={}'.format(host_id)).json()
+        params = dict(id=host_id)
+        return self._get('/status/hosts/get', params).json()
 
     def hosts_summary(self):
         """
@@ -71,8 +74,9 @@ class MMonit:
         """
         return self._get('/reports/uptime/list').json()
 
-    def uptime_services(self):
-        return self._get('/reports/uptime/get').json()
+    def uptime_services(self, host_id=None):
+        params = self._build_dict(id=host_id)
+        return self._get('/reports/uptime/get', params).json()
 
     def events_list(self):
         """
@@ -81,7 +85,8 @@ class MMonit:
         return self._get('/reports/events/list').json()
 
     def events_get(self, event_id):
-        return self._get('/reports/events/get?id={}'.format(event_id)).json()
+        params = dict(id=event_id)
+        return self._get('/reports/events/get', params).json()
 
     def events_summary(self):
         return self._get('/reports/events/summary').json()
@@ -96,7 +101,8 @@ class MMonit:
         return self._get('/admin/hosts/list').json()
 
     def admin_hosts_get(self, host_id):
-        return self._get('/admin/hosts/get?id={}'.format(host_id)).json()
+        params = dict(id=host_id)
+        return self._get('/admin/hosts/get', params).json()
 
     def admin_hosts_upadte(self, host_id, **kwargs):
         return NotImplemented
