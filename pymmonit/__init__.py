@@ -5,7 +5,7 @@ __version__ = '0.3.0-dev0'
 __author__ = 'Javier Palomo Almena'
 
 
-class MMonit:
+class MMonit(object):
     def __init__(self, mmonit_url, username, password):
         self.mmonit_url = mmonit_url
         self.username = username
@@ -39,6 +39,24 @@ class MMonit:
                 d[k] = v
         return d
 
+    def _all_results(self, url, base_params):
+        idx = 0
+        records_total = None
+        records_received = 0
+        run = True
+        while run:
+            params = dict(base_params,
+                          results=500,
+                          startindex=records_received)
+            results = self._get(url, params).json()
+            if records_total == None:
+                records_total = results['totalRecords']
+            records_received += results['recordsReturned']
+            run = (records_received < records_total
+                    or results['recordsReturned'] == 0)
+            for record in results['records']:
+                yield record
+
     def hosts_list(self, hostid=None, hostgroupid=None, status=None,
                    platform=None, led=None):
         """
@@ -55,11 +73,11 @@ class MMonit:
             return self._get('/status/hosts/list').json()
         return self._post('/status/hosts/list', data).json()
 
-    def hosts_get(self, host_id):
+    def hosts_get(self, hostid):
         """
         Returns detailed status of the given host.
         """
-        params = dict(id=host_id)
+        params = dict(id=hostid)
         return self._get('/status/hosts/get', params).json()
 
     def hosts_summary(self):
@@ -74,18 +92,19 @@ class MMonit:
         """
         return self._get('/reports/uptime/list').json()
 
-    def uptime_services(self, host_id=None):
-        params = self._build_dict(id=host_id)
+    def uptime_services(self, hostid=None):
+        params = self._build_dict(id=hostid)
         return self._get('/reports/uptime/get', params).json()
 
-    def events_list(self):
+    def events_list(self, hostid=None):
         """
         http://mmonit.com/documentation/http-api/Methods/Events
         """
-        return self._get('/reports/events/list').json()
+        params = self._build_dict(hostid=hostid)
+        return self._all_results('/reports/events/list', params)
 
-    def events_get(self, event_id):
-        params = dict(id=event_id)
+    def events_get(self, eventid=None):
+        params = self._build_dict(id=eventid)
         return self._get('/reports/events/get', params).json()
 
     def events_summary(self):
@@ -100,15 +119,15 @@ class MMonit:
         """
         return self._get('/admin/hosts/list').json()
 
-    def admin_hosts_get(self, host_id):
-        params = dict(id=host_id)
+    def admin_hosts_get(self, hostid):
+        params = dict(id=hostid)
         return self._get('/admin/hosts/get', params).json()
 
-    def admin_hosts_upadte(self, host_id, **kwargs):
+    def admin_hosts_upadte(self, hostid, **kwargs):
         return NotImplemented
 
-    def admin_hosts_delete(self, host_id):
-        return self._post('/admin/hosts/delete', {'id': host_id}).json()
+    def admin_hosts_delete(self, hostid):
+        return self._post('/admin/hosts/delete', {'id': hostid}).json()
 
     def admin_hosts_test(self, ipaddr, port, ssl, monituser, monitpassword):
         data = {
