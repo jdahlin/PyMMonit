@@ -123,7 +123,7 @@ class MMonit(object):
         params = dict(id=hostid)
         return self._get('/admin/hosts/get', params).json()
 
-    def admin_hosts_upadte(self, hostid, **kwargs):
+    def admin_hosts_update(self, hostid, **kwargs):
         return NotImplemented
 
     def admin_hosts_delete(self, hostid):
