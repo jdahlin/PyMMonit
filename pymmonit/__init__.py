@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import netrc
+import urlparse
+
 import requests
 
 __version__ = '0.3.0-dev0'
@@ -6,10 +9,17 @@ __author__ = 'Javier Palomo Almena'
 
 
 class MMonit(object):
-    def __init__(self, mmonit_url, username, password):
+    def __init__(self, mmonit_url, username=None, password=None):
         self.mmonit_url = mmonit_url
         self.username = username
         self.password = password
+
+        if self.username is None and self.password is None:
+            hostname = urlparse.urlparse(mmonit_url).netloc
+            cred = netrc.netrc().hosts.get(hostname)
+            if cred is not None:
+                self.username = cred[0]
+                self.password = cred[2]
         self.login()
 
     def login(self):
