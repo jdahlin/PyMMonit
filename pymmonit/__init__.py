@@ -106,11 +106,11 @@ class MMonit(object):
         params = self._build_dict(id=hostid)
         return self._get('/reports/uptime/get', params).json()
 
-    def events_list(self, hostid=None):
+    def events_list(self, hostid=None, servicenameid=None):
         """
         http://mmonit.com/documentation/http-api/Methods/Events
         """
-        params = self._build_dict(hostid=hostid)
+        params = self._build_dict(hostid=hostid, servicenameid=servicenameid)
         return self._all_results('/reports/events/list', params)
 
     def events_get(self, eventid=None):
