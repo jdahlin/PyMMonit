@@ -44,7 +44,7 @@ class MMonit(object):
 
     def _build_dict(self, **kwargs):
         d = {}
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if v is not None:
                 d[k] = v
         return d
@@ -106,11 +106,15 @@ class MMonit(object):
         params = self._build_dict(id=hostid)
         return self._get('/reports/uptime/get', params).json()
 
-    def events_list(self, hostid=None, servicenameid=None):
+    def events_list(self, hostid=None, servicenameid=None, sort=None, dir=None):
         """
         http://mmonit.com/documentation/http-api/Methods/Events
         """
-        params = self._build_dict(hostid=hostid, servicenameid=servicenameid)
+        params = self._build_dict(
+            hostid=hostid,
+            servicenameid=servicenameid,
+            sort=sort,
+            dir=dir)
         return self._all_results('/reports/events/list', params)
 
     def events_get(self, eventid=None):
